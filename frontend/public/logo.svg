@@ -1,11 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="AgriMind logo">
   <circle cx="32" cy="32" r="30" fill="#D4C4A8" stroke="#5C6B52" stroke-width="2"/>
+  <!-- grain stalk -->
   <path d="M32 44V22" stroke="#5C6B52" stroke-width="2" stroke-linecap="round"/>
   <ellipse cx="32" cy="20" rx="3" ry="5" fill="#8FA88C"/>
   <ellipse cx="28" cy="24" rx="2.5" ry="4" fill="#8FA88C" transform="rotate(-20 28 24)"/>
   <ellipse cx="36" cy="24" rx="2.5" ry="4" fill="#8FA88C" transform="rotate(20 36 24)"/>
   <ellipse cx="26" cy="29" rx="2" ry="3.5" fill="#7A9678" transform="rotate(-30 26 29)"/>
   <ellipse cx="38" cy="29" rx="2" ry="3.5" fill="#7A9678" transform="rotate(30 38 29)"/>
+  <!-- circuit brain -->
   <circle cx="32" cy="38" r="10" fill="none" stroke="#C9846B" stroke-width="1.5"/>
   <path d="M26 36h4M34 36h4M28 40h8" stroke="#C9846B" stroke-width="1.5" stroke-linecap="round"/>
   <circle cx="26" cy="36" r="1.5" fill="#C9846B"/>

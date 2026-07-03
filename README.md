@@ -18,7 +18,13 @@ Instead of relying on a single generalized language model, AgriMind utilizes an 
 ## Running Locally
 
 1. Create a `.env` inside `backend/` from `.env.example` and add your Claude API key.
-2. Run `docker-compose up -d` at the root directory.
+2. Run `docker-compose up -d` at the root directory (recommended — starts MongoDB, ChromaDB, backend, frontend).
 3. Upon first launch, seed the Vector DB:
    `docker-compose exec backend npm run seed`
 4. Access the UI at `http://localhost:8080`.
+
+### Local development (without Docker)
+- Backend: `cd backend && npm start` (port 5000)
+- Frontend: `cd frontend && npm run dev` (port 5173, proxies `/api` to backend)
+- Start ChromaDB separately: `chroma run --path ./chroma_data --port 8000`
+- Set `USE_MEMORY_MONGO=true` in `.env` for embedded MongoDB, or run MongoDB locally.

@@ -1,14 +1,67 @@
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Inter:wght@300..700&display=swap');
+@import "tailwindcss";
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@theme {
+  --color-sage: #6F8A6C;
+  --color-wheat: #D4C4A8;
+  --color-terracotta: #B86F52;
+  --color-charcoal: #2E2E28;
+  --color-cream: #E8E0D0;
+
+  --font-sans: 'Inter', sans-serif;
+  --font-serif: 'Fraunces', serif;
+
+  --radius-organic: 10px;
+
+  --shadow-soft: 0 4px 20px -2px rgba(46, 46, 40, 0.12);
+}
 
 @layer base {
   body {
-    @apply bg-cream text-charcoal font-sans antialiased;
+    background-color: var(--color-cream);
+    color: var(--color-charcoal);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
   }
   h1, h2, h3, h4, h5, h6 {
-    @apply font-serif;
+    font-family: var(--font-serif);
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-sage text-white font-medium rounded-organic shadow-sm transition-all duration-150;
+    @apply hover:bg-[#5C7359] active:bg-[#4E624B] active:scale-[0.98];
+    @apply disabled:opacity-50 disabled:pointer-events-none;
+  }
+
+  .btn-accent {
+    @apply bg-terracotta text-white font-medium rounded-md transition-all duration-150;
+    @apply hover:bg-[#A35F44] active:bg-[#8E5239] active:scale-[0.98];
+    @apply disabled:opacity-50 disabled:pointer-events-none;
+  }
+
+  .nav-link {
+    @apply text-charcoal/80 font-medium transition-all duration-150 rounded-md px-2 py-1;
+    @apply hover:text-terracotta hover:bg-wheat/60 active:bg-wheat/80 active:text-[#9E5A3E];
+  }
+
+  .card-surface {
+    @apply bg-white rounded-organic shadow-soft border border-sage/20;
+  }
+
+  .card-interactive {
+    @apply bg-white rounded-organic shadow-soft border border-sage/20 transition-all duration-150;
+    @apply hover:shadow-md hover:border-sage/40 active:shadow-sm active:scale-[0.995];
+  }
+
+  .upload-zone {
+    @apply border-2 border-dashed border-sage/50 rounded-organic p-8 text-center flex flex-col items-center justify-center bg-cream/50 min-h-[250px] transition-all duration-150 cursor-pointer;
+    @apply hover:border-sage/70 hover:bg-cream/70 active:bg-cream/90 active:border-sage;
+  }
+
+  .input-field {
+    @apply w-full p-3 rounded-md bg-cream/60 border border-sage/40 outline-none transition-all duration-150;
+    @apply focus:border-terracotta focus:ring-1 focus:ring-terracotta;
+    @apply hover:border-sage/60;
   }
 }

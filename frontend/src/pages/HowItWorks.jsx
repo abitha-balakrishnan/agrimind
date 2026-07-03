@@ -1,22 +1,11 @@
 import { useEffect, useRef } from 'react';
 import mermaid from 'mermaid';
 
-export default function HowItWorks() {
-  const chartRef = useRef(null);
-
-  useEffect(() => {
-    mermaid.initialize({ startOnLoad: true, theme: 'neutral' });
-    if (chartRef.current) {
-        mermaid.contentLoaded();
-    }
-  }, []);
-
-  const chartDefinition = `
-graph TD
-    classDef client fill:#E8DCC8,stroke:#3A3A34,stroke-width:2px;
-    classDef orchestrator fill:#C9846B,stroke:#fff,stroke-width:2px,color:#fff;
-    classDef agent fill:#8FA88C,stroke:#fff,stroke-width:2px,color:#fff;
-    classDef db fill:#3A3A34,stroke:#fff,stroke-width:2px,color:#fff;
+const FLOWCHART = `graph TD
+    classDef client fill:#D4C4A8,stroke:#2E2E28,stroke-width:2px;
+    classDef orchestrator fill:#B86F52,stroke:#fff,stroke-width:2px,color:#fff;
+    classDef agent fill:#6F8A6C,stroke:#fff,stroke-width:2px,color:#fff;
+    classDef db fill:#2E2E28,stroke:#fff,stroke-width:2px,color:#fff;
 
     UI[Farmer / Dashboard UI]:::client -->|Raw Inputs + Optional Image| Orch(Orchestrator Agent):::orchestrator
     
@@ -41,22 +30,73 @@ graph TD
     
     Cron((Cron Job)) -.->|Periodic Check| A(Alert Agent):::agent
     DB -.-> A
-    A -.->|Twilio SMS| Phone[Farmer Phone]:::client
-  `;
+    A -.->|Twilio SMS| Phone[Farmer Phone]:::client`;
 
+const USE_CASE = `flowchart LR
+    Farmer((Farmer))
+    Admin((System Admin))
+
+    subgraph AgriMind["AgriMind System"]
+        UC1[Get Crop Suggestion]
+        UC2[Get Weather Advisory]
+        UC3[Get Fertilizer Plan]
+        UC4[Scan for Pest]
+        UC5[Get Irrigation Schedule]
+        UC6[Receive SMS Alert]
+        UC7[View History]
+    end
+
+    Farmer --> UC1
+    Farmer --> UC2
+    Farmer --> UC3
+    Farmer --> UC4
+    Farmer --> UC5
+    Farmer --> UC7
+    Farmer <--> UC6
+    Admin --> UC7`;
+
+function MermaidChart({ id, definition }) {
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!ref.current) return;
+    mermaid.initialize({ startOnLoad: false, theme: 'neutral', securityLevel: 'loose' });
+    const render = async () => {
+      ref.current.innerHTML = definition;
+      try {
+        await mermaid.run({ nodes: [ref.current] });
+      } catch (err) {
+        console.error('Mermaid render error:', err);
+      }
+    };
+    render();
+  }, [definition]);
+
+  return <div ref={ref} className="mermaid" />;
+}
+
+export default function HowItWorks() {
   return (
-    <div className="space-y-8 max-w-4xl mx-auto">
-      <h1 className="text-3xl text-terracotta border-b border-sage/20 pb-4">System Architecture</h1>
+    <div className="space-y-10 max-w-4xl mx-auto">
+      <h1 className="text-3xl text-terracotta border-b border-sage/30 pb-4">How AgriMind Works</h1>
       <p className="text-charcoal/80 leading-relaxed">
-        AgriMind doesn't rely on a single massive language model prompt. Instead, we use a <strong>Multi-Agent Orcherstration Pattern</strong>. 
-        Each agent has a specific persona, tools, and RAG context limitations.
+        AgriMind uses a <strong>Multi-Agent Orchestration Pattern</strong>. Each specialist agent has its own persona,
+        prompt engineering, and RAG context — then an orchestrator synthesizes a single farmer-friendly plan.
       </p>
 
-      <div className="bg-white p-8 rounded-organic shadow-soft border border-sage/10 overflow-x-auto flex justify-center">
-        <pre className="mermaid" ref={chartRef}>
-          {chartDefinition}
-        </pre>
-      </div>
+      <section className="space-y-4">
+        <h2 className="text-2xl text-charcoal font-serif">System Flow</h2>
+        <div className="card-surface p-8 overflow-x-auto flex justify-center">
+          <MermaidChart id="flowchart" definition={FLOWCHART} />
+        </div>
+      </section>
+
+      <section className="space-y-4">
+        <h2 className="text-2xl text-charcoal font-serif">Use Cases</h2>
+        <div className="card-surface p-8 overflow-x-auto flex justify-center">
+          <MermaidChart id="usecase" definition={USE_CASE} />
+        </div>
+      </section>
     </div>
   );
 }

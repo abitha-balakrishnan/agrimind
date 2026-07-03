@@ -1,5 +1,5 @@
 import { invokeClaudeJSON } from '../llm/claudeClient.js';
-import { getCollection } from '../db/chroma.js';
+import { queryKnowledge } from '../db/chroma.js';
 
 const SYSTEM_PROMPT = `You are an expert Agricultural Crop Recommendation Agent.
 Your task is to suggest suitable crops based on user input (soil type, season, region, land size, water availability) and grounded RAG knowledge.
@@ -29,21 +29,7 @@ Example output:
 }`;
 
 export const cropAgent = async (farmerQuery) => {
-    // 1. RAG Retrieve
-    let context = "No specific RAG context found.";
-    try {
-        const cropCollection = await getCollection('crop_kb');
-        const results = await cropCollection.query({
-            queryTexts: [JSON.stringify(farmerQuery)],
-            nResults: 3
-        });
-        
-        if (results && results.documents[0].length > 0) {
-            context = results.documents[0].join('\n');
-        }
-    } catch (e) {
-        console.warn("Chroma query failed in Crop Agent", e);
-    }
+    const context = await queryKnowledge('crop_kb', JSON.stringify(farmerQuery), 3);
 
     const userPrompt = `Farmer Data: ${JSON.stringify(farmerQuery)}
     Reference Knowledge (RAG Data):

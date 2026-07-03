@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import AgentTimeline from '../components/AgentTimeline';
-import axios from 'axios';
+import api from '../api';
+import PestScanner from '../components/PestScanner';
 
 export default function Dashboard() {
   const [formData, setFormData] = useState({
@@ -12,17 +13,18 @@ export default function Dashboard() {
   
   const [isLoading, setIsLoading] = useState(false);
   const [agentResults, setAgentResults] = useState(null);
+  const [error, setError] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+    setError(null);
     try {
-      // In a real app we'd proxy this through Vite, using full URL for simplicity if not proxied
-      const res = await axios.post('http://localhost:5000/api/agent/query', formData);
+      const res = await api.post('/agent/query', formData);
       setAgentResults(res.data);
-    } catch (error) {
-      console.error(error);
-      alert("Failed to fetch advice.");
+    } catch (err) {
+      console.error(err);
+      setError(err.response?.data?.error || 'Failed to fetch advice.');
     } finally {
       setIsLoading(false);
     }
@@ -35,7 +37,7 @@ export default function Dashboard() {
         <p className="text-lg text-charcoal/80">Enter your farm details below. Our suite of 5 AI specialists will analyze your condition and orchestrate a complete advisory plan.</p>
       </section>
 
-      <section className="bg-white rounded-organic shadow-soft p-8 max-w-3xl mx-auto border border-sage/10">
+      <section className="card-surface p-8 max-w-3xl mx-auto">
         <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
             <label className="text-sm font-semibold text-charcoal/70 uppercase tracking-wider">Location</label>
@@ -43,7 +45,7 @@ export default function Dashboard() {
               required
               type="text" 
               placeholder="e.g. Pune, Maharashtra" 
-              className="w-full p-3 rounded-md bg-cream/50 border border-sage/30 focus:border-terracotta focus:ring-1 focus:ring-terracotta outline-none transition-all"
+              className="input-field"
               value={formData.location}
               onChange={e => setFormData({...formData, location: e.target.value})}
             />
@@ -52,7 +54,7 @@ export default function Dashboard() {
             <label className="text-sm font-semibold text-charcoal/70 uppercase tracking-wider">Soil Type</label>
             <select 
               required
-              className="w-full p-3 rounded-md bg-cream/50 border border-sage/30 focus:border-terracotta focus:ring-1 focus:ring-terracotta outline-none transition-all"
+              className="input-field"
               value={formData.soilType}
               onChange={e => setFormData({...formData, soilType: e.target.value})}
             >
@@ -69,7 +71,7 @@ export default function Dashboard() {
             <input 
               type="number" 
               placeholder="e.g. 5" 
-              className="w-full p-3 rounded-md bg-cream/50 border border-sage/30 focus:border-terracotta focus:ring-1 focus:ring-terracotta outline-none transition-all"
+              className="input-field"
               value={formData.landSize}
               onChange={e => setFormData({...formData, landSize: e.target.value})}
             />
@@ -79,16 +81,17 @@ export default function Dashboard() {
             <input 
               type="text" 
               placeholder="e.g. Tomato" 
-              className="w-full p-3 rounded-md bg-cream/50 border border-sage/30 focus:border-terracotta focus:ring-1 focus:ring-terracotta outline-none transition-all"
+              className="input-field"
               value={formData.crop}
               onChange={e => setFormData({...formData, crop: e.target.value})}
             />
           </div>
           <div className="md:col-span-2 pt-4">
+            {error && <p className="text-terracotta text-sm mb-3">{error}</p>}
             <button 
               disabled={isLoading}
               type="submit" 
-              className="w-full bg-sage hover:bg-sage/90 text-white font-medium text-lg py-4 rounded-organic shadow-sm transition-all disabled:opacity-50"
+              className="btn-primary w-full text-lg py-4"
             >
               {isLoading ? 'Agents are analyzing...' : 'Generate Advisory Plan'}
             </button>
@@ -99,6 +102,7 @@ export default function Dashboard() {
       { (isLoading || agentResults) && (
         <AgentTimeline isLoading={isLoading} results={agentResults} />
       )}
+      <PestScanner crop={formData.crop} />
     </div>
   );
 }

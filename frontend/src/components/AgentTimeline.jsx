@@ -1,7 +1,6 @@
 import { motion } from 'framer-motion';
 import { CloudRain, Sprout, TestTube, Bug, Droplet } from 'lucide-react';
 import clsx from 'clsx';
-import PestScanner from './PestScanner';
 
 const AgentIcon = ({ name, status }) => {
   const icons = {
@@ -33,7 +32,7 @@ export default function AgentTimeline({ isLoading, results }) {
     <div className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-700">
       
       {/* Horizontal Timeline Visualization */}
-      <div className="bg-white p-8 rounded-organic shadow-soft border border-sage/10 hidden md:block">
+      <div className="card-surface p-8 hidden md:block">
         <h3 className="text-xl text-center mb-8 text-terracotta border-b border-sage/20 pb-4 inline-block justify-center font-serif">Agent Orchestration Track</h3>
         <div className="flex items-center justify-between relative px-12">
           {/* Track Line */}
@@ -74,17 +73,13 @@ export default function AgentTimeline({ isLoading, results }) {
         )}
 
       </div>
-      
-      {/* Standalone Pest Agent */}
-      <PestScanner />
-
     </div>
   );
 }
 
 function AgentCard({ title, icon, data }) {
   return (
-    <div className="bg-white p-6 rounded-organic shadow-sm border border-sage/10 hover:shadow-soft transition-all">
+    <div className="card-interactive p-6">
       <div className="flex items-center gap-3 mb-4 text-terracotta border-b border-sage/10 pb-3">
         {icon}
         <h4 className="font-semibold text-lg">{title}</h4>

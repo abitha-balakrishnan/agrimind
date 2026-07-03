@@ -1,13 +1,13 @@
 import { ChromaClient } from 'chromadb';
-import { DefaultEmbeddingFunction } from 'chromadb-default-embed';
 import dotenv from 'dotenv';
 dotenv.config();
 
-const chromaClient = new ChromaClient({
-    path: process.env.CHROMA_URI || 'http://localhost:8000'
-});
+const parseChromaUri = (uri) => {
+    const url = new URL(uri || 'http://localhost:8000');
+    return { host: url.hostname, port: url.port ? Number(url.port) : 8000, ssl: url.protocol === 'https:' };
+};
 
-const embedder = new DefaultEmbeddingFunction();
+const chromaClient = new ChromaClient(parseChromaUri(process.env.CHROMA_URI));
 
 const CROPS = [
     { id: 'crop-1', name: 'Rice', info: 'Best grown in clayey, loamy soil holding water. Requires heavy rainfall (above 100cm) and high temperature (above 25°C). Kharif crop.' },
@@ -42,48 +42,32 @@ const PESTS = [
     { id: 'pest-12', name: 'Early Blight', info: 'Fungal disease causing concentric dark rings on older leaves (bullseye pattern). Treatment: Chlorothalonil or Copper fungicides.' },
 ];
 
+const seedCollection = async (name, items, label) => {
+    const collection = await chromaClient.getOrCreateCollection({ name });
+    const count = await collection.count();
+    if (count > 0) {
+        console.log(`${label} collection already has ${count} items. Skipping.`);
+        return;
+    }
+
+    await collection.add({
+        ids: items.map(i => i.id),
+        documents: items.map(i => `${label}: ${i.name}. ${i.info}`),
+        metadatas: items.map(i => ({ name: i.name, type: label.toLowerCase() })),
+    });
+    console.log(`Seeded ${items.length} ${label.toLowerCase()} entries.`);
+};
+
 const seedDatabase = async () => {
     try {
-        console.log('Connecting to ChromaDB at', process.env.CHROMA_URI);
-        const cropCollection = await chromaClient.getOrCreateCollection({ 
-            name: 'crop_kb',
-            embeddingFunction: embedder 
-        });
-        
-        const countCrops = await cropCollection.count();
-        if (countCrops === 0) {
-            console.log('Seeding Crop Knowledge Base...');
-            await cropCollection.add({
-                ids: CROPS.map(c => c.id),
-                documents: CROPS.map(c => `Crop: ${c.name}. ${c.info}`),
-                metadatas: CROPS.map(c => ({ name: c.name, type: 'crop' }))
-            });
-            console.log(`Seeded ${CROPS.length} crops.`);
-        } else {
-            console.log(`Crop collection already populated with ${countCrops} items. Skipping.`);
-        }
-
-        const pestCollection = await chromaClient.getOrCreateCollection({ 
-            name: 'pest_kb',
-            embeddingFunction: embedder 
-        });
-        
-        const countPests = await pestCollection.count();
-        if (countPests === 0) {
-            console.log('Seeding Pest Knowledge Base...');
-            await pestCollection.add({
-                ids: PESTS.map(p => p.id),
-                documents: PESTS.map(p => `Pest/Disease: ${p.name}. ${p.info}`),
-                metadatas: PESTS.map(p => ({ name: p.name, type: 'pest' }))
-            });
-            console.log(`Seeded ${PESTS.length} pests.`);
-        } else {
-            console.log(`Pest collection already populated with ${countPests} items. Skipping.`);
-        }
-
+        console.log('Connecting to ChromaDB at', process.env.CHROMA_URI || 'http://localhost:8000');
+        await chromaClient.heartbeat();
+        await seedCollection('crop_kb', CROPS, 'Crop');
+        await seedCollection('pest_kb', PESTS, 'Pest/Disease');
         console.log('Database seeding complete.');
     } catch (error) {
-        console.error('Error seeding database:', error);
+        console.error('Error seeding database:', error.message);
+        process.exit(1);
     }
 };
 

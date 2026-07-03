@@ -58,4 +58,49 @@ sudo docker-compose exec backend npm run seed
 
 ## 6. Verification
 - Open your browser to `http://<EC2-PUBLIC-IP>:8080` to view the frontend.
-- API is accessible at `http://<EC2-PUBLIC-IP>:5000/api/...`
+- API is proxied through the frontend Nginx container at `http://<EC2-PUBLIC-IP>:8080/api/...`
+
+---
+
+# Deployment Instructions (Azure VM + Docker Compose)
+
+## 1. Provision an Azure VM
+1. Log in to the [Azure Portal](https://portal.azure.com).
+2. Create a **Virtual Machine** (Ubuntu 22.04 LTS recommended).
+3. Size: `Standard_B2s` or higher (2+ vCPU, 4+ GB RAM for Mongo + Chroma + Node).
+4. Networking — open inbound ports:
+   - SSH (22)
+   - HTTP (80) — optional if using port 8080 directly
+   - Custom TCP **8080** (frontend)
+
+## 2. Connect & Install Docker
+```bash
+ssh azureuser@<VM-PUBLIC-IP>
+
+sudo apt update && sudo apt upgrade -y
+sudo apt install docker.io docker-compose -y
+sudo systemctl enable docker && sudo systemctl start docker
+sudo usermod -aG docker $USER
+# Log out and back in for group change
+```
+
+## 3. Clone & Configure
+```bash
+git clone <your-repo-url> agrimind
+cd agrimind
+cp backend/.env.example backend/.env
+nano backend/.env
+# Set ANTHROPIC_API_KEY, WEATHER_API_KEY, Twilio credentials
+```
+
+## 4. Launch Stack
+```bash
+export ANTHROPIC_API_KEY=sk-ant-...
+export WEATHER_API_KEY=...
+docker-compose up -d --build
+docker-compose exec backend npm run seed
+```
+
+## 5. Verify
+- Frontend: `http://<VM-PUBLIC-IP>:8080`
+- Health: `http://<VM-PUBLIC-IP>:8080/api/../health` via proxy, or `http://<VM-PUBLIC-IP>:5000/health` direct
