@@ -1,0 +1,51 @@
+version: '3.8'
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "5000:5000"
+    environment:
+      - MONGODB_URI=mongodb://mongo:27017/agrimind
+      - CHROMA_URI=http://chroma:8000
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - WEATHER_API_KEY=${WEATHER_API_KEY}
+    depends_on:
+      - mongo
+      - chroma
+    networks:
+      - agrimind_net
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    networks:
+      - agrimind_net
+
+  mongo:
+    image: mongo:6
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - agrimind_net
+
+  chroma:
+    image: chromadb/chroma:latest
+    ports:
+      - "8000:8000"
+    volumes:
+      - chroma_data:/chroma/chroma
+    networks:
+      - agrimind_net
+
+networks:
+  agrimind_net:
+    driver: bridge
+
+volumes:
+  mongo_data:
+  chroma_data:
