@@ -32,7 +32,12 @@ export const getCollection = async (name) => {
     return chromaClient.getOrCreateCollection({ name });
 };
 
+const COLLECTIONS = ['crop_kb', 'fertilizer_kb', 'pest_kb'];
+
 export const queryKnowledge = async (collectionName, queryText, nResults = 3) => {
+    if (!COLLECTIONS.includes(collectionName)) {
+        return queryFallback(collectionName, queryText, nResults);
+    }
     if (!chromaConnected) {
         return queryFallback(collectionName, queryText, nResults);
     }

@@ -29,12 +29,48 @@
   --shadow-soft: 0 4px 20px -2px rgba(46, 46, 40, 0.12);
 }
 
+/* Theme tokens — light (default) */
+:root,
+[data-theme="light"] {
+  --app-bg: #E8E0D0;
+  --app-surface: #ffffff;
+  --app-surface-muted: rgba(232, 224, 208, 0.6);
+  --app-text: #2E2E28;
+  --app-text-muted: rgba(46, 46, 40, 0.7);
+  --app-header-bg: rgba(212, 196, 168, 0.7);
+  --app-footer-bg: rgba(212, 196, 168, 0.3);
+  --app-border: rgba(111, 138, 108, 0.3);
+  --brand-text: #784530;
+  --brand-glow: rgba(184, 111, 82, 0.35);
+  --brand-shadow: 0 2px 12px rgba(184, 111, 82, 0.25), 0 0 20px rgba(111, 138, 108, 0.15);
+}
+
+/* Theme tokens — dark */
+[data-theme="dark"] {
+  --app-bg: #1a1f18;
+  --app-surface: #252b23;
+  --app-surface-muted: rgba(37, 43, 35, 0.8);
+  --app-text: #E8E0D0;
+  --app-text-muted: rgba(232, 224, 208, 0.72);
+  --app-header-bg: rgba(37, 43, 35, 0.95);
+  --app-footer-bg: rgba(30, 36, 28, 0.9);
+  --app-border: rgba(111, 138, 108, 0.35);
+  --brand-text: #E0D4BC;
+  --brand-glow: rgba(201, 132, 107, 0.4);
+  --brand-shadow: 0 2px 16px rgba(201, 132, 107, 0.3), 0 0 24px rgba(111, 138, 108, 0.2);
+  --shadow-soft: 0 4px 24px -2px rgba(0, 0, 0, 0.35);
+
+  --color-charcoal: #E8E0D0;
+  --color-cream: #2a3028;
+}
+
 @layer base {
   body {
-    background-color: var(--color-cream);
-    color: var(--color-charcoal);
+    background-color: var(--app-bg);
+    color: var(--app-text);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
+    transition: background-color 0.2s ease, color 0.2s ease;
   }
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-serif);
@@ -42,6 +78,43 @@
 }
 
 @layer components {
+  .app-header {
+    background-color: var(--app-header-bg);
+    border-bottom: 1px solid var(--app-border);
+  }
+
+  .app-footer {
+    color: var(--app-text-muted);
+    background-color: var(--app-footer-bg);
+    border-color: var(--app-border);
+  }
+
+  .brand-link {
+    @apply flex items-center gap-3 transition-all duration-150;
+    @apply hover:opacity-90 active:opacity-80 active:scale-[0.98];
+  }
+
+  .brand-logo {
+    box-shadow: var(--brand-shadow);
+    filter: drop-shadow(0 0 6px var(--brand-glow));
+  }
+
+  .brand-text {
+    color: var(--brand-text);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+    letter-spacing: 0.01em;
+  }
+
+  [data-theme="dark"] .brand-text {
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  }
+
+  .theme-toggle {
+    @apply flex items-center justify-center w-9 h-9 rounded-md transition-all duration-150;
+    @apply bg-sage-700 text-white hover:bg-sage-500 active:bg-sage-400 active:scale-95;
+    @apply shrink-0;
+  }
+
   .btn-primary {
     @apply bg-sage-700 text-white font-medium rounded-organic shadow-sm transition-all duration-150;
     @apply hover:bg-sage-500 active:bg-sage-400 active:scale-[0.98];
@@ -60,17 +133,25 @@
     @apply disabled:opacity-50 disabled:pointer-events-none;
   }
 
+  [data-theme="dark"] .btn-secondary {
+    @apply bg-sage-800 text-cream hover:bg-sage-600;
+  }
+
   .nav-link {
     @apply bg-sage-700 text-white font-medium transition-all duration-150 rounded-md px-3 py-1.5;
     @apply hover:bg-sage-500 active:bg-sage-400 active:scale-[0.98];
   }
 
   .card-surface {
-    @apply bg-white rounded-organic shadow-soft border border-sage/20;
+    background-color: var(--app-surface);
+    @apply rounded-organic shadow-soft border;
+    border-color: var(--app-border);
   }
 
   .card-interactive {
-    @apply bg-white rounded-organic shadow-soft border border-sage/20 transition-all duration-150;
+    background-color: var(--app-surface);
+    @apply rounded-organic shadow-soft border transition-all duration-150;
+    border-color: var(--app-border);
     @apply hover:shadow-md hover:border-sage/40 active:shadow-sm active:scale-[0.995];
   }
 
@@ -100,8 +181,31 @@
   }
 
   .input-field {
-    @apply w-full p-3 rounded-md bg-cream/60 border border-sage/40 outline-none transition-all duration-150;
+    background-color: var(--app-surface-muted);
+    color: var(--app-text);
+    @apply w-full p-3 rounded-md border border-sage/40 outline-none transition-all duration-150;
     @apply focus:border-terracotta focus:ring-1 focus:ring-terracotta;
     @apply hover:border-sage/60;
+  }
+
+  [data-theme="dark"] .text-charcoal\/80,
+  [data-theme="dark"] .text-charcoal\/70,
+  [data-theme="dark"] .text-charcoal\/60,
+  [data-theme="dark"] .text-charcoal\/50,
+  [data-theme="dark"] .text-charcoal\/90 {
+    color: var(--app-text-muted);
+  }
+
+  [data-theme="dark"] .text-charcoal {
+    color: var(--app-text);
+  }
+
+  [data-theme="dark"] .bg-cream\/40,
+  [data-theme="dark"] .bg-cream\/60 {
+    background-color: rgba(37, 43, 35, 0.6);
+  }
+
+  [data-theme="dark"] .bg-white {
+    background-color: var(--app-surface);
   }
 }

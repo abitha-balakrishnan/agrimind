@@ -2,30 +2,19 @@ import { invokeClaudeJSON } from '../llm/claudeClient.js';
 import { queryKnowledge } from '../db/chroma.js';
 
 const SYSTEM_PROMPT = `You are an expert Agricultural Crop Recommendation Agent.
-Your task is to suggest suitable crops based on user input (soil type, season, region, land size, water availability) and grounded RAG knowledge.
+Your task is to suggest suitable crops based on the farmer's ACTUAL input (location, soil type, land size, target crop) and grounded RAG knowledge.
+Every recommendation MUST reflect the specific soil type and location provided — never give generic advice unrelated to the input.
 
 Return ONLY a strictly valid JSON object matching this schema:
 {
   "recommendedCrops": [
     {
       "name": "string",
-      "reasoning": "string. Explain why this crop is suitable.",
+      "reasoning": "string. Explain why this crop suits THIS soil type and location.",
       "estimatedYield": "string. Examples: 'High', 'Moderate'"
     }
   ],
   "generalAdvice": "string"
-}
-
-Example output:
-{
-  "recommendedCrops": [
-    {
-      "name": "Wheat",
-      "reasoning": "Well suited for loamy soil and cool rabi season.",
-      "estimatedYield": "High"
-    }
-  ],
-  "generalAdvice": "Ensure proper drainage."
 }`;
 
 export const cropAgent = async (farmerQuery) => {
@@ -35,7 +24,7 @@ export const cropAgent = async (farmerQuery) => {
     Reference Knowledge (RAG Data):
     ${context}
     
-    Please provide the crop recommendation based on the Farmer Data and Reference Knowledge.`;
+    Provide crop recommendations specifically for location="${farmerQuery.location}", soil="${farmerQuery.soilType}", land=${farmerQuery.landSize} acres${farmerQuery.crop ? `, target crop="${farmerQuery.crop}"` : ''}.`;
 
     const result = await invokeClaudeJSON(SYSTEM_PROMPT, userPrompt);
     return result;

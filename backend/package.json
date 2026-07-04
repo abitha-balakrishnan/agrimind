@@ -7,6 +7,8 @@
     "start": "node server.js",
     "dev": "nodemon server.js",
     "seed": "node scripts/seed.js",
+    "seed:force": "node scripts/seed.js --force",
+    "verify": "node scripts/verify-module-a.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

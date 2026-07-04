@@ -16,8 +16,9 @@ export const handleQuery = async (farmerQuery) => {
         irrigationAgent(farmerQuery, weatherData)
     ]);
 
-    // Synthesize final response
+    // Synthesize final response — must reflect the specific farmer inputs
     const synthesisPrompt = `You are the AgriMind Orchestrator. Combine the individual agent responses into a single cohesive narrative for the farmer.
+    The narrative MUST specifically mention their location, soil type, land size, and target crop (if provided).
     Keep the tone encouraging, professional, and easy to understand.
     Do not mention "agents" or "AI", just present the advice directly.
     Return ONLY a valid JSON object with a single "executiveSummary" string field.`;

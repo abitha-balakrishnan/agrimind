@@ -34,7 +34,7 @@ export default function Dashboard() {
     <div className="space-y-12">
       <section className="text-center max-w-2xl mx-auto space-y-4">
         <h1 className="text-4xl md:text-5xl text-terracotta">Your Intelligent Farm Advisor</h1>
-        <p className="text-lg text-charcoal/80">Enter your farm details below. Our suite of 5 AI specialists will analyze your condition and orchestrate a complete advisory plan.</p>
+        <p className="text-lg text-charcoal/80">Enter your farm details below. Four AI specialists — Weather, Crop, Fertilizer, and Irrigation — will analyze your conditions and build a tailored advisory plan. (Pest diagnosis is available separately in the scanner below.)</p>
       </section>
 
       <section className="card-surface p-8 max-w-3xl mx-auto">

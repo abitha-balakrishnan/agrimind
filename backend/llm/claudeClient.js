@@ -2,53 +2,52 @@ import Anthropic from '@anthropic-ai/sdk';
 import dotenv from 'dotenv';
 dotenv.config();
 
-const anthropic = new Anthropic({
-    apiKey: process.env.ANTHROPIC_API_KEY || 'dummy-key', 
-});
-
 const MODEL = process.env.CLAUDE_MODEL || 'claude-sonnet-4-20250514';
 
-const isMockMode = () => {
+export class ApiKeyMissingError extends Error {
+    constructor() {
+        super('ANTHROPIC_API_KEY is not configured. Set a valid API key in backend/.env to enable AI features.');
+        this.name = 'ApiKeyMissingError';
+        this.statusCode = 503;
+    }
+}
+
+const getClient = () => {
     const key = process.env.ANTHROPIC_API_KEY;
-    return !key || key === 'your_anthropic_api_key_here';
+    if (!key || key === 'your_anthropic_api_key_here') {
+        throw new ApiKeyMissingError();
+    }
+    return new Anthropic({ apiKey: key });
+};
+
+export const isApiKeyConfigured = () => {
+    const key = process.env.ANTHROPIC_API_KEY;
+    return Boolean(key && key !== 'your_anthropic_api_key_here');
 };
 
 const parseJsonResponse = (textOutput) => {
     const jsonMatch = textOutput.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-    if (jsonMatch) return JSON.parse(jsonMatch[1]);
-    return JSON.parse(textOutput);
+    const raw = jsonMatch ? jsonMatch[1] : textOutput;
+    return JSON.parse(raw.trim());
 };
 
 /**
  * Plain text generation (for chatbot responses)
  */
 export const invokeClaudeText = async (systemPrompt, userPrompt, temperature = 0.3) => {
-    if (isMockMode()) {
-        console.warn("Mocking Claude text because no API Key is provided.");
-        if (systemPrompt.includes('Tamil') || systemPrompt.includes('தமிழ்')) {
-            return "நெல் பயிருக்கு அடி உரமாக NPK 19:19:19 ஐ 50 கிலோ/ஏக்கருக்கு பயன்படுத்தலாம். மண் பரிசோதனை செய்து உரத்தை சரிசெய்யுங்கள்.";
-        }
-        if (systemPrompt.includes('Hindi') || systemPrompt.includes('हिंदी')) {
-            return "चावल की खेती के लिए NPK 19:19:19 को 50 किग्रा/एकड़ की दर से बुवाई के समय प्रयोग करें। मिट्टी परीक्षण के आधार पर मात्रा समायोजित करें।";
-        }
-        if (systemPrompt.includes('missing information') || systemPrompt.includes('Ask the farmer')) {
-            return "I'd be happy to help! Could you please tell me your location and soil type so I can give you accurate advice?";
-        }
-        return "For rice cultivation, apply NPK 19:19:19 at 50 kg per acre as basal fertilizer at sowing. Adjust based on soil test results and local extension guidance.";
-    }
-
+    const anthropic = getClient();
     try {
         const msg = await anthropic.messages.create({
             model: MODEL,
             max_tokens: 1500,
             temperature,
             system: systemPrompt,
-            messages: [{ role: "user", content: userPrompt }],
+            messages: [{ role: 'user', content: userPrompt }],
         });
         return msg.content[0].text;
     } catch (error) {
-        console.error("LLM Text Error:", error);
-        throw new Error("Failed to generate response from Claude API.");
+        console.error('LLM Text Error:', error.message);
+        throw new Error(`Failed to generate response from Claude API: ${error.message}`);
     }
 };
 
@@ -56,33 +55,21 @@ export const invokeClaudeText = async (systemPrompt, userPrompt, temperature = 0
  * Standard text generation with JSON enforcement
  */
 export const invokeClaudeJSON = async (systemPrompt, userPrompt, temperature = 0) => {
-    if (isMockMode()) {
-        console.warn("Mocking Claude because no API Key is provided.");
-        if (systemPrompt.includes('Crop Recommendation Agent')) return { recommendedCrops: [{ name: "Wheat", reasoning: "Well suited for loamy soil in the rabi season.", estimatedYield: "High" }], generalAdvice: "Ensure proper drainage before sowing." };
-        if (systemPrompt.includes('Weather Advisory Agent')) return { forecastSummary: "Mild showers expected over the next 48 hours.", farmingAdvice: "Delay pesticide spraying until conditions dry.", alerts: ["Light Rain Advisory"] };
-        if (systemPrompt.includes('Fertilizer Recommendation Agent')) return { reasoningScratchpad: "", recommendations: [{ fertilizerType: "NPK 19:19:19", quantityPerAcre: "50kg", applicationMethod: "Basal application at sowing" }], organicAlternatives: ["Vermicompost 2 tonnes/acre"] };
-        if (systemPrompt.includes('Irrigation Scheduling Agent')) return { schedule: [{ day: "Monday", action: "Water 1.5 inches", reasoning: "Soil moisture low after dry spell" }], waterConservationTip: "Mulch around plants to reduce evaporation." };
-        if (systemPrompt.includes('Orchestrator')) return { executiveSummary: "Based on your loamy soil and regional conditions, wheat is a strong choice this season. Apply basal NPK at sowing, delay spraying until after the forecast showers pass, and irrigate early in the week to replenish soil moisture." };
-        if (systemPrompt.includes('Chat Router')) return { intent: "fertilizer", extractedContext: { crop: "rice" }, needsMoreInfo: false, missingFields: [] };
-        return {};
-    }
-    
+    const anthropic = getClient();
     try {
         const msg = await anthropic.messages.create({
             model: MODEL,
             max_tokens: 2000,
             temperature,
             system: systemPrompt,
-            messages: [
-                { role: "user", content: userPrompt }
-            ]
+            messages: [{ role: 'user', content: userPrompt }],
         });
 
         const textOutput = msg.content[0].text;
         return parseJsonResponse(textOutput);
     } catch (error) {
-        console.error("LLM Error:", error);
-        throw new Error("Failed to generate response from Claude API.");
+        console.error('LLM JSON Error:', error.message);
+        throw new Error(`Failed to generate JSON from Claude API: ${error.message}`);
     }
 };
 
@@ -90,20 +77,7 @@ export const invokeClaudeJSON = async (systemPrompt, userPrompt, temperature = 0
  * Vision generation for Pest Detection
  */
 export const invokeClaudeVisionJSON = async (systemPrompt, base64Image, mediaType, userPrompt, temperature = 0) => {
-    if (isMockMode()) {
-        console.warn("Mocking Claude Vision because no API Key is provided.");
-        return {
-            reasoningScratchpad: "Visible brown lesions with concentric rings on leaf surface suggest fungal pathology.",
-            diagnosis: "Early Blight",
-            confidence: 87,
-            treatmentSpecs: {
-                chemical: ["Chlorothalonil spray every 7-10 days"],
-                organic: ["Neem oil spray and remove affected leaves"],
-                preventative: ["Crop rotation and improved air circulation"],
-            },
-        };
-    }
-    
+    const anthropic = getClient();
     try {
         const msg = await anthropic.messages.create({
             model: MODEL,
@@ -111,30 +85,30 @@ export const invokeClaudeVisionJSON = async (systemPrompt, base64Image, mediaTyp
             temperature,
             system: systemPrompt,
             messages: [
-                { 
-                    role: "user", 
+                {
+                    role: 'user',
                     content: [
                         {
-                            type: "image",
+                            type: 'image',
                             source: {
-                                type: "base64",
+                                type: 'base64',
                                 media_type: mediaType,
-                                data: base64Image
-                            }
+                                data: base64Image,
+                            },
                         },
                         {
-                            type: "text",
-                            text: userPrompt
-                        }
-                    ] 
-                }
-            ]
+                            type: 'text',
+                            text: userPrompt,
+                        },
+                    ],
+                },
+            ],
         });
 
         const textOutput = msg.content[0].text;
         return parseJsonResponse(textOutput);
     } catch (error) {
-        console.error("LLM Vision Error:", error);
-        throw new Error("Failed to process image with Claude API.");
+        console.error('LLM Vision Error:', error.message);
+        throw new Error(`Failed to process image with Claude API: ${error.message}`);
     }
 };

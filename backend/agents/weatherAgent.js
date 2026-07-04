@@ -45,7 +45,7 @@ export const weatherAgent = async (location) => {
     const userPrompt = `Location: ${location}
     Raw Weather Data: ${JSON.stringify(rawWeather)}
     
-    Provide your weather advisory.`;
+    Provide weather advisory tailored to farming activities in ${location}.`;
 
     const result = await invokeClaudeJSON(SYSTEM_PROMPT, userPrompt);
     // Attach raw info for frontend

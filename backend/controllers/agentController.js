@@ -3,6 +3,14 @@ import { pestAgent } from '../agents/pestAgent.js';
 import { chatAgent } from '../agents/chatAgent.js';
 import { QueryHistory } from '../models/QueryHistory.js';
 import { isMongoConnected } from '../db/mongo.js';
+import { ApiKeyMissingError } from '../llm/claudeClient.js';
+
+const handleApiError = (res, error) => {
+    if (error instanceof ApiKeyMissingError) {
+        return res.status(503).json({ error: error.message });
+    }
+    return null;
+};
 
 export const processFarmerQuery = async (req, res) => {
     try {
@@ -31,6 +39,7 @@ export const processFarmerQuery = async (req, res) => {
         res.json(synthesisResult);
     } catch (error) {
         console.error("Error in processFarmerQuery:", error);
+        if (handleApiError(res, error)) return;
         res.status(500).json({ error: "Failed to process query." });
     }
 };
@@ -62,6 +71,7 @@ export const scanPestImage = async (req, res) => {
         res.json(diagnosis);
     } catch (error) {
         console.error("Error in scanPestImage:", error);
+        if (handleApiError(res, error)) return;
         res.status(500).json({ error: error.message || "Failed to scan image." });
     }
 };
@@ -89,6 +99,7 @@ export const processChatMessage = async (req, res) => {
         res.json(result);
     } catch (error) {
         console.error('Error in processChatMessage:', error);
+        if (handleApiError(res, error)) return;
         res.status(500).json({ error: 'Failed to process chat message.' });
     }
 };

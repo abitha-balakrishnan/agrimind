@@ -70,12 +70,14 @@ export default function ChatWidget() {
       }
     } catch (err) {
       console.error(err);
-      const errMsg =
+      const apiError = err.response?.data?.error;
+      const errMsg = apiError || (
         language === 'ta'
           ? 'பிழை ஏற்பட்டது. மீண்டும் முயற்சிக்கவும்.'
           : language === 'hi'
             ? 'त्रुटि हुई। कृपया पुनः प्रयास करें।'
-            : 'Something went wrong. Please try again.';
+            : 'Something went wrong. Please try again.'
+      );
       setMessages((prev) => [...prev, { role: 'bot', text: errMsg }]);
     } finally {
       setLoading(false);

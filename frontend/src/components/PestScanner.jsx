@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { UploadCloud, Bug } from 'lucide-react';
+import { UploadCloud, Bug, AlertCircle } from 'lucide-react';
 import api from '../api';
 
 export default function PestScanner({ crop = '' }) {
@@ -23,7 +23,8 @@ export default function PestScanner({ crop = '' }) {
     if (!file) return;
     setIsScanning(true);
     setError(null);
-    
+    setDiagnosis(null);
+
     const formData = new FormData();
     formData.append('image', file);
     formData.append('crop', crop || 'Unknown');
@@ -39,6 +40,7 @@ export default function PestScanner({ crop = '' }) {
     }
   };
 
+  const isRejected = diagnosis?.isPlantLeaf === false;
   const treatment = diagnosis?.treatmentSpecs?.organic?.[0]
     || diagnosis?.treatmentSpecs?.chemical?.[0]
     || diagnosis?.treatmentSpecs?.preventative?.[0];
@@ -51,7 +53,7 @@ export default function PestScanner({ crop = '' }) {
         </div>
         <div>
           <h3 className="text-xl font-serif text-charcoal font-semibold">Pest & Disease Scanner</h3>
-          <p className="text-sm text-charcoal/60">Upload a leaf photo for specialized AI pathology analysis.</p>
+          <p className="text-sm text-charcoal/60">Upload a clear photo of an affected plant leaf for AI pathology analysis.</p>
         </div>
       </div>
 
@@ -60,12 +62,12 @@ export default function PestScanner({ crop = '' }) {
           {preview ? (
             <div className="space-y-4">
               <img src={preview} alt="Plant leaf preview" className="max-h-48 rounded-md mx-auto shadow-sm" />
-              <button 
+              <button
                 onClick={handleScan}
                 disabled={isScanning}
                 className="btn-accent px-6 py-2"
               >
-                {isScanning ? 'Scanning via Claude Vision...' : 'Scan Now'}
+                {isScanning ? 'Analyzing image…' : 'Scan Now'}
               </button>
             </div>
           ) : (
@@ -79,7 +81,21 @@ export default function PestScanner({ crop = '' }) {
 
         <div className="bg-cream/60 p-6 rounded-organic border border-sage/30 flex flex-col justify-center min-h-[250px]">
           {error && <p className="text-terracotta text-sm">{error}</p>}
-          {diagnosis && (
+
+          {isRejected && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 text-amber-700">
+                <AlertCircle size={20} />
+                <h4 className="text-lg font-semibold">Not a Plant Leaf</h4>
+              </div>
+              <p className="text-charcoal/80 leading-relaxed">
+                {diagnosis.rejectionMessage ||
+                  'This does not look like a plant leaf — please upload a clear photo of the affected leaf.'}
+              </p>
+            </div>
+          )}
+
+          {diagnosis && !isRejected && (
             <>
               <h4 className="text-lg font-semibold text-charcoal mb-4 pb-2 border-b border-sage/30">Diagnosis Report</h4>
               <div className="space-y-3">
@@ -98,6 +114,7 @@ export default function PestScanner({ crop = '' }) {
               </div>
             </>
           )}
+
           {!diagnosis && !error && (
             <p className="text-charcoal/50 text-center">Upload a leaf image and scan to see diagnosis results here.</p>
           )}

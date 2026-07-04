@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Calculator, ArrowRightLeft } from 'lucide-react';
+import { Calculator, ArrowRightLeft, IndianRupee } from 'lucide-react';
 
 const CATEGORIES = {
   area: {
@@ -49,6 +49,10 @@ const CATEGORIES = {
     },
     baseUnit: 'kgPerSqm',
   },
+  price: {
+    label: 'Price Calculator',
+    isPrice: true,
+  },
 };
 
 function convert(value, fromUnit, toUnit, category) {
@@ -61,9 +65,110 @@ function convert(value, fromUnit, toUnit, category) {
   const base = from.toBase(num);
   const fromBaseToTarget = Object.entries(cat.units).find(([k]) => k === toUnit)?.[1];
   if (!fromBaseToTarget) return null;
-  // Reverse: find multiplier by testing with 1
   const testBase = fromBaseToTarget.toBase(1);
   return base / testBase;
+}
+
+function calcPrice(knownQty, knownPrice, targetQty) {
+  const qty = Number(knownQty);
+  const price = Number(knownPrice);
+  const target = Number(targetQty);
+  if (!qty || !price || !target || qty <= 0 || price < 0 || target < 0) return null;
+  return (price / qty) * target;
+}
+
+function PriceCalculatorPanel() {
+  const [knownQty, setKnownQty] = useState('5');
+  const [knownPrice, setKnownPrice] = useState('50');
+  const [targetQty, setTargetQty] = useState('12');
+  const [unitLabel, setUnitLabel] = useState('kg');
+
+  const result = useMemo(
+    () => calcPrice(knownQty, knownPrice, targetQty),
+    [knownQty, knownPrice, targetQty]
+  );
+
+  const formatCurrency = (num) => {
+    if (num === null) return '—';
+    return num.toLocaleString('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 });
+  };
+
+  return (
+    <div className="space-y-6">
+      <p className="text-charcoal/70 text-sm leading-relaxed">
+        Enter a known price for a quantity, then enter a different quantity — the calculator
+        computes the proportional price instantly.
+      </p>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <label className="text-sm font-semibold text-charcoal/70 uppercase tracking-wider">Known Quantity</label>
+          <div className="flex gap-2">
+            <input
+              type="number"
+              min="0"
+              step="any"
+              value={knownQty}
+              onChange={(e) => setKnownQty(e.target.value)}
+              className="input-field text-lg flex-1"
+              placeholder="e.g. 5"
+            />
+            <input
+              type="text"
+              value={unitLabel}
+              onChange={(e) => setUnitLabel(e.target.value)}
+              className="input-field w-20 text-center"
+              placeholder="kg"
+              aria-label="Unit label"
+            />
+          </div>
+        </div>
+        <div className="space-y-2">
+          <label className="text-sm font-semibold text-charcoal/70 uppercase tracking-wider">Known Price (₹)</label>
+          <input
+            type="number"
+            min="0"
+            step="any"
+            value={knownPrice}
+            onChange={(e) => setKnownPrice(e.target.value)}
+            className="input-field text-lg"
+            placeholder="e.g. 50"
+          />
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <label className="text-sm font-semibold text-charcoal/70 uppercase tracking-wider">New Quantity (to price)</label>
+        <div className="flex gap-2">
+          <input
+            type="number"
+            min="0"
+            step="any"
+            value={targetQty}
+            onChange={(e) => setTargetQty(e.target.value)}
+            className="input-field text-lg flex-1"
+            placeholder="e.g. 12"
+          />
+          <span className="input-field w-20 text-center flex items-center justify-center bg-cream/40 text-charcoal/60">
+            {unitLabel || 'kg'}
+          </span>
+        </div>
+      </div>
+
+      <div className="bg-sage-700/10 border border-sage/30 rounded-organic p-6 text-center">
+        <p className="text-sm text-charcoal/60 uppercase tracking-wider mb-2">Equivalent Price</p>
+        <p className="text-3xl font-serif text-terracotta font-semibold flex items-center justify-center gap-1">
+          <IndianRupee size={28} className="inline" />
+          {result !== null ? result.toLocaleString('en-IN', { maximumFractionDigits: 2 }) : '—'}
+        </p>
+        {result !== null && (
+          <p className="text-sm text-charcoal/50 mt-2">
+            {knownQty} {unitLabel} = ₹{knownPrice} → {targetQty} {unitLabel} = {formatCurrency(result)}
+          </p>
+        )}
+      </div>
+    </div>
+  );
 }
 
 export default function UnitConverter() {
@@ -72,10 +177,12 @@ export default function UnitConverter() {
   const [fromUnit, setFromUnit] = useState('acre');
   const [toUnit, setToUnit] = useState('hectare');
 
-  const unitKeys = Object.keys(CATEGORIES[category].units);
+  const isPrice = category === 'price';
+  const unitKeys = isPrice ? [] : Object.keys(CATEGORIES[category].units);
 
   const handleCategoryChange = (cat) => {
     setCategory(cat);
+    if (cat === 'price') return;
     const keys = Object.keys(CATEGORIES[cat].units);
     setFromUnit(keys[0]);
     setToUnit(keys[1] || keys[0]);
@@ -83,8 +190,8 @@ export default function UnitConverter() {
   };
 
   const result = useMemo(
-    () => convert(value, fromUnit, toUnit, category),
-    [value, fromUnit, toUnit, category]
+    () => (isPrice ? null : convert(value, fromUnit, toUnit, category)),
+    [value, fromUnit, toUnit, category, isPrice]
   );
 
   const swapUnits = () => {
@@ -106,7 +213,7 @@ export default function UnitConverter() {
         </div>
         <h1 className="text-3xl md:text-4xl text-terracotta">Agriculture Unit Converter</h1>
         <p className="text-charcoal/80">
-          Convert land area, weight, irrigation volume, fertilizer rates, and yield units instantly.
+          Convert land area, weight, irrigation volume, fertilizer rates, yield units, and calculate proportional prices.
         </p>
       </section>
 
@@ -131,75 +238,81 @@ export default function UnitConverter() {
           </div>
         </div>
 
-        <div className="space-y-2">
-          <label className="text-sm font-semibold text-charcoal/70 uppercase tracking-wider">Value</label>
-          <input
-            type="number"
-            min="0"
-            step="any"
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            className="input-field text-lg"
-            placeholder="Enter value"
-          />
-        </div>
+        {isPrice ? (
+          <PriceCalculatorPanel />
+        ) : (
+          <>
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-charcoal/70 uppercase tracking-wider">Value</label>
+              <input
+                type="number"
+                min="0"
+                step="any"
+                value={value}
+                onChange={(e) => setValue(e.target.value)}
+                className="input-field text-lg"
+                placeholder="Enter value"
+              />
+            </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-4 items-end">
-          <div className="space-y-2">
-            <label className="text-sm font-semibold text-charcoal/70 uppercase tracking-wider">From</label>
-            <select
-              value={fromUnit}
-              onChange={(e) => setFromUnit(e.target.value)}
-              className="input-field"
-            >
-              {unitKeys.map((key) => (
-                <option key={key} value={key}>
-                  {CATEGORIES[category].units[key].label}
-                </option>
-              ))}
-            </select>
-          </div>
+            <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-4 items-end">
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-charcoal/70 uppercase tracking-wider">From</label>
+                <select
+                  value={fromUnit}
+                  onChange={(e) => setFromUnit(e.target.value)}
+                  className="input-field"
+                >
+                  {unitKeys.map((key) => (
+                    <option key={key} value={key}>
+                      {CATEGORIES[category].units[key].label}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-          <button
-            type="button"
-            onClick={swapUnits}
-            className="btn-secondary p-3 mx-auto md:mb-1"
-            aria-label="Swap units"
-          >
-            <ArrowRightLeft size={20} />
-          </button>
+              <button
+                type="button"
+                onClick={swapUnits}
+                className="btn-secondary p-3 mx-auto md:mb-1"
+                aria-label="Swap units"
+              >
+                <ArrowRightLeft size={20} />
+              </button>
 
-          <div className="space-y-2">
-            <label className="text-sm font-semibold text-charcoal/70 uppercase tracking-wider">To</label>
-            <select
-              value={toUnit}
-              onChange={(e) => setToUnit(e.target.value)}
-              className="input-field"
-            >
-              {unitKeys.map((key) => (
-                <option key={key} value={key}>
-                  {CATEGORIES[category].units[key].label}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-charcoal/70 uppercase tracking-wider">To</label>
+                <select
+                  value={toUnit}
+                  onChange={(e) => setToUnit(e.target.value)}
+                  className="input-field"
+                >
+                  {unitKeys.map((key) => (
+                    <option key={key} value={key}>
+                      {CATEGORIES[category].units[key].label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
 
-        <div className="bg-sage-700/10 border border-sage/30 rounded-organic p-6 text-center">
-          <p className="text-sm text-charcoal/60 uppercase tracking-wider mb-2">Result</p>
-          <p className="text-3xl font-serif text-terracotta font-semibold">
-            {formatResult(result)}{' '}
-            <span className="text-lg text-charcoal/70 font-sans">
-              {CATEGORIES[category].units[toUnit]?.label}
-            </span>
-          </p>
-          {value && result !== null && (
-            <p className="text-sm text-charcoal/50 mt-2">
-              {value} {CATEGORIES[category].units[fromUnit]?.label} = {formatResult(result)}{' '}
-              {CATEGORIES[category].units[toUnit]?.label}
-            </p>
-          )}
-        </div>
+            <div className="bg-sage-700/10 border border-sage/30 rounded-organic p-6 text-center">
+              <p className="text-sm text-charcoal/60 uppercase tracking-wider mb-2">Result</p>
+              <p className="text-3xl font-serif text-terracotta font-semibold">
+                {formatResult(result)}{' '}
+                <span className="text-lg text-charcoal/70 font-sans">
+                  {CATEGORIES[category].units[toUnit]?.label}
+                </span>
+              </p>
+              {value && result !== null && (
+                <p className="text-sm text-charcoal/50 mt-2">
+                  {value} {CATEGORIES[category].units[fromUnit]?.label} = {formatResult(result)}{' '}
+                  {CATEGORIES[category].units[toUnit]?.label}
+                </p>
+              )}
+            </div>
+          </>
+        )}
       </section>
 
       <section className="card-surface p-6 text-sm text-charcoal/70 space-y-2">
@@ -209,6 +322,7 @@ export default function UnitConverter() {
           <li>1 quintal = 100 kg | 1 maund ≈ 40 kg (regional)</li>
           <li>1 cubic meter = 1,000 liters ≈ 264 gallons</li>
           <li>kg/acre to kg/hectare: multiply by 2.471</li>
+          <li>Price example: 5 kg @ ₹50 → 12 kg = ₹120 (₹10 per kg)</li>
         </ul>
       </section>
     </div>
