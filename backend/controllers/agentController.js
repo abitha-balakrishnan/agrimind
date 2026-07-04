@@ -1,5 +1,6 @@
 import { handleQuery } from '../agents/orchestrator.js';
 import { pestAgent } from '../agents/pestAgent.js';
+import { chatAgent } from '../agents/chatAgent.js';
 import { QueryHistory } from '../models/QueryHistory.js';
 import { isMongoConnected } from '../db/mongo.js';
 
@@ -62,6 +63,33 @@ export const scanPestImage = async (req, res) => {
     } catch (error) {
         console.error("Error in scanPestImage:", error);
         res.status(500).json({ error: error.message || "Failed to scan image." });
+    }
+};
+
+export const processChatMessage = async (req, res) => {
+    try {
+        const { message, language = 'en', context = {} } = req.body;
+        if (!message || !message.trim()) {
+            return res.status(400).json({ error: 'Message is required.' });
+        }
+
+        const validLanguages = ['en', 'ta', 'hi'];
+        const lang = validLanguages.includes(language) ? language : 'en';
+
+        const result = await chatAgent({ message: message.trim(), language: lang, context });
+
+        if (isMongoConnected) {
+            await QueryHistory.create({
+                farmerId: context.farmerId || 'default',
+                crop: context.crop || 'Chat',
+                executiveSummary: result.reply,
+            });
+        }
+
+        res.json(result);
+    } catch (error) {
+        console.error('Error in processChatMessage:', error);
+        res.status(500).json({ error: 'Failed to process chat message.' });
     }
 };
 

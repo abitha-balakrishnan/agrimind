@@ -69,7 +69,7 @@ export default function PestScanner({ crop = '' }) {
               </button>
             </div>
           ) : (
-            <label className="cursor-pointer flex flex-col items-center text-sage/80 hover:text-sage transition-colors duration-150 active:text-[#5C7359]">
+            <label className="cursor-pointer flex flex-col items-center text-sage-700 hover:text-sage-500 transition-colors duration-150 active:text-sage-400">
               <UploadCloud size={40} className="mb-2" />
               <span className="font-medium">Click to upload leaf photo</span>
               <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} />

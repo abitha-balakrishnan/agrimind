@@ -20,6 +20,39 @@ const parseJsonResponse = (textOutput) => {
 };
 
 /**
+ * Plain text generation (for chatbot responses)
+ */
+export const invokeClaudeText = async (systemPrompt, userPrompt, temperature = 0.3) => {
+    if (isMockMode()) {
+        console.warn("Mocking Claude text because no API Key is provided.");
+        if (systemPrompt.includes('Tamil') || systemPrompt.includes('தமிழ்')) {
+            return "நெல் பயிருக்கு அடி உரமாக NPK 19:19:19 ஐ 50 கிலோ/ஏக்கருக்கு பயன்படுத்தலாம். மண் பரிசோதனை செய்து உரத்தை சரிசெய்யுங்கள்.";
+        }
+        if (systemPrompt.includes('Hindi') || systemPrompt.includes('हिंदी')) {
+            return "चावल की खेती के लिए NPK 19:19:19 को 50 किग्रा/एकड़ की दर से बुवाई के समय प्रयोग करें। मिट्टी परीक्षण के आधार पर मात्रा समायोजित करें।";
+        }
+        if (systemPrompt.includes('missing information') || systemPrompt.includes('Ask the farmer')) {
+            return "I'd be happy to help! Could you please tell me your location and soil type so I can give you accurate advice?";
+        }
+        return "For rice cultivation, apply NPK 19:19:19 at 50 kg per acre as basal fertilizer at sowing. Adjust based on soil test results and local extension guidance.";
+    }
+
+    try {
+        const msg = await anthropic.messages.create({
+            model: MODEL,
+            max_tokens: 1500,
+            temperature,
+            system: systemPrompt,
+            messages: [{ role: "user", content: userPrompt }],
+        });
+        return msg.content[0].text;
+    } catch (error) {
+        console.error("LLM Text Error:", error);
+        throw new Error("Failed to generate response from Claude API.");
+    }
+};
+
+/**
  * Standard text generation with JSON enforcement
  */
 export const invokeClaudeJSON = async (systemPrompt, userPrompt, temperature = 0) => {
@@ -30,6 +63,7 @@ export const invokeClaudeJSON = async (systemPrompt, userPrompt, temperature = 0
         if (systemPrompt.includes('Fertilizer Recommendation Agent')) return { reasoningScratchpad: "", recommendations: [{ fertilizerType: "NPK 19:19:19", quantityPerAcre: "50kg", applicationMethod: "Basal application at sowing" }], organicAlternatives: ["Vermicompost 2 tonnes/acre"] };
         if (systemPrompt.includes('Irrigation Scheduling Agent')) return { schedule: [{ day: "Monday", action: "Water 1.5 inches", reasoning: "Soil moisture low after dry spell" }], waterConservationTip: "Mulch around plants to reduce evaporation." };
         if (systemPrompt.includes('Orchestrator')) return { executiveSummary: "Based on your loamy soil and regional conditions, wheat is a strong choice this season. Apply basal NPK at sowing, delay spraying until after the forecast showers pass, and irrigate early in the week to replenish soil moisture." };
+        if (systemPrompt.includes('Chat Router')) return { intent: "fertilizer", extractedContext: { crop: "rice" }, needsMoreInfo: false, missingFields: [] };
         return {};
     }
     
