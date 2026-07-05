@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import AgentTimeline from '../components/AgentTimeline';
-import api from '../api';
+import api, { getErrorMessage } from '../api';
 import PestScanner from '../components/PestScanner';
 
 export default function Dashboard() {
@@ -24,7 +24,7 @@ export default function Dashboard() {
       setAgentResults(res.data);
     } catch (err) {
       console.error(err);
-      setError(err.response?.data?.error || 'Failed to fetch advice.');
+      setError(getErrorMessage(err, 'Failed to fetch advice.'));
     } finally {
       setIsLoading(false);
     }

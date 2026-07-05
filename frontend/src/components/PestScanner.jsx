@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { UploadCloud, Bug, AlertCircle } from 'lucide-react';
-import api from '../api';
+import api, { getErrorMessage } from '../api';
 
 export default function PestScanner({ crop = '' }) {
   const [file, setFile] = useState(null);
@@ -34,7 +34,7 @@ export default function PestScanner({ crop = '' }) {
       setDiagnosis(res.data);
     } catch (err) {
       console.error(err);
-      setError(err.response?.data?.error || 'Failed to scan image. Please try again.');
+      setError(getErrorMessage(err, 'Failed to scan image. Please try again.'));
     } finally {
       setIsScanning(false);
     }

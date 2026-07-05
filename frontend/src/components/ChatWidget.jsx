@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { MessageCircle, X, Send, Mic, MicOff, Volume2 } from 'lucide-react';
-import api from '../api';
+import api, { getErrorMessage } from '../api';
 
 const LANGUAGES = [
   { code: 'en', label: 'English', speech: 'en-IN', synth: 'en-IN' },
@@ -70,14 +70,12 @@ export default function ChatWidget() {
       }
     } catch (err) {
       console.error(err);
-      const apiError = err.response?.data?.error;
-      const errMsg = apiError || (
-        language === 'ta'
-          ? 'பிழை ஏற்பட்டது. மீண்டும் முயற்சிக்கவும்.'
-          : language === 'hi'
-            ? 'त्रुटि हुई। कृपया पुनः प्रयास करें।'
-            : 'Something went wrong. Please try again.'
-      );
+      const fallbackMsg = language === 'ta'
+        ? 'பிழை ஏற்பட்டது. மீண்டும் முயற்சிக்கவும்.'
+        : language === 'hi'
+          ? 'त्रुटि हुई। कृपया पुनः प्रयास करें।'
+          : 'Something went wrong. Please try again.';
+      const errMsg = getErrorMessage(err, fallbackMsg);
       setMessages((prev) => [...prev, { role: 'bot', text: errMsg }]);
     } finally {
       setLoading(false);
