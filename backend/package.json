@@ -9,12 +9,18 @@
     "seed": "node scripts/seed.js",
     "seed:force": "node scripts/seed.js --force",
     "verify": "node scripts/verify-module-a.js",
+    "verify:full": "node scripts/verify-full.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
+  "config": {
+    "mongodbMemoryServer": {
+      "disablePostinstall": "1"
+    }
+  },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.110.0",
     "chromadb": "^3.5.0",

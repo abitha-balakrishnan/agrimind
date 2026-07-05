@@ -30,8 +30,8 @@ const startServer = async () => {
         await setupChroma();
 
         if (!isApiKeyConfigured()) {
-            console.warn('\n⚠️  ANTHROPIC_API_KEY is not set — AI features will return errors until configured.');
-            console.warn('   Copy backend/.env.example to backend/.env and add your Anthropic API key.\n');
+            console.warn('\n⚠️  ANTHROPIC_API_KEY is not set — using dataset-powered local fallback for AI features.');
+            console.warn('   Set a valid key in backend/.env for live Claude responses.\n');
         } else {
             console.log('✓ Claude API key configured — live AI responses enabled.');
         }
