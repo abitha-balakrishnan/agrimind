@@ -11,6 +11,8 @@
 ![MongoDB](https://img.shields.io/badge/Database-MongoDB-6DA34D?style=for-the-badge&logo=mongodb&logoColor=white)
 ![ChromaDB](https://img.shields.io/badge/VectorDB-ChromaDB-D2B48C?style=for-the-badge)
 
+[![Live Demo](https://img.shields.io/badge/🔴_Live_Demo-agrimind--eight.vercel.app-6DA34D?style=for-the-badge)](https://agrimind-eight.vercel.app/)
+
 </div>
 
 ---
@@ -103,7 +105,7 @@ flowchart TD
 
 | Service | Link |
 |---|---|
-| 🌐 Frontend | *[add your Vercel link here once live]* |
+| 🌐 Frontend | [agrimind-eight.vercel.app](https://agrimind-eight.vercel.app/) |
 | ⚙️ Backend API | *[add your Render link here once live]* |
 
 ---
